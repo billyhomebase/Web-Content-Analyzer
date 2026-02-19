@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { encodingForModel } from "js-tiktoken";
 import type {
   AnalysisResult,
   ModelTokenEstimate,
@@ -8,6 +9,8 @@ import type {
   Recommendation,
 } from "@shared/schema";
 
+const tiktokenEncoder = encodingForModel("gpt-4o");
+
 const MODEL_CONFIGS = [
   {
     model: "GPT-4o",
@@ -16,6 +19,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 2.5,
     costPerMillionOutput: 10.0,
     contextWindow: 128_000,
+    useTiktoken: true,
   },
   {
     model: "GPT-4o mini",
@@ -24,6 +28,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 0.15,
     costPerMillionOutput: 0.6,
     contextWindow: 128_000,
+    useTiktoken: true,
   },
   {
     model: "Claude 3.5 Sonnet",
@@ -32,6 +37,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 3.0,
     costPerMillionOutput: 15.0,
     contextWindow: 200_000,
+    useTiktoken: false,
   },
   {
     model: "Claude 3.5 Haiku",
@@ -40,6 +46,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 0.8,
     costPerMillionOutput: 4.0,
     contextWindow: 200_000,
+    useTiktoken: false,
   },
   {
     model: "Gemini 2.0 Flash",
@@ -48,6 +55,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 0.1,
     costPerMillionOutput: 0.4,
     contextWindow: 1_000_000,
+    useTiktoken: false,
   },
   {
     model: "Gemini 1.5 Pro",
@@ -56,6 +64,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 1.25,
     costPerMillionOutput: 5.0,
     contextWindow: 2_000_000,
+    useTiktoken: false,
   },
   {
     model: "Llama 3.1 70B",
@@ -64,6 +73,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 0.88,
     costPerMillionOutput: 0.88,
     contextWindow: 128_000,
+    useTiktoken: false,
   },
   {
     model: "Mistral Large",
@@ -72,6 +82,7 @@ const MODEL_CONFIGS = [
     costPerMillionInput: 2.0,
     costPerMillionOutput: 6.0,
     contextWindow: 128_000,
+    useTiktoken: false,
   },
 ];
 
@@ -80,13 +91,35 @@ function estimateTokens(text: string, charsPerToken: number): number {
   return Math.ceil(text.length / charsPerToken);
 }
 
+function countTokensTiktoken(text: string): number {
+  if (!text) return 0;
+  return tiktokenEncoder.encode(text).length;
+}
+
 function getModelEstimates(
   rawHtml: string,
   cleanedText: string
 ): ModelTokenEstimate[] {
+  let tiktokenRaw: number | null = null;
+  let tiktokenCleaned: number | null = null;
+
   return MODEL_CONFIGS.map((config) => {
-    const tokensRaw = estimateTokens(rawHtml, config.charsPerToken);
-    const tokensCleaned = estimateTokens(cleanedText, config.charsPerToken);
+    let tokensRaw: number;
+    let tokensCleaned: number;
+    const isExact = config.useTiktoken;
+
+    if (config.useTiktoken) {
+      if (tiktokenRaw === null) {
+        tiktokenRaw = countTokensTiktoken(rawHtml);
+        tiktokenCleaned = countTokensTiktoken(cleanedText);
+      }
+      tokensRaw = tiktokenRaw;
+      tokensCleaned = tiktokenCleaned!;
+    } else {
+      tokensRaw = estimateTokens(rawHtml, config.charsPerToken);
+      tokensCleaned = estimateTokens(cleanedText, config.charsPerToken);
+    }
+
     return {
       model: config.model,
       provider: config.provider,
@@ -100,6 +133,7 @@ function getModelEstimates(
         (tokensCleaned / 1_000_000) * config.costPerMillionInput,
       contextWindow: config.contextWindow,
       fitsInContext: tokensCleaned <= config.contextWindow,
+      isExact,
     };
   });
 }

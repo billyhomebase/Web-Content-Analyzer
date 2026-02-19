@@ -17,6 +17,7 @@ export interface ModelTokenEstimate {
   estimatedInputCostCleaned: number;
   contextWindow: number;
   fitsInContext: boolean;
+  isExact: boolean;
 }
 
 export interface ContentBreakdown {

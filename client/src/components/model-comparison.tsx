@@ -9,8 +9,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ModelTokenEstimate } from "@shared/schema";
-import { Check, X } from "lucide-react";
+import { Check, X, CircleCheck, CircleDashed } from "lucide-react";
 
 interface ModelComparisonProps {
   estimates: ModelTokenEstimate[];
@@ -31,6 +36,29 @@ function formatCost(cost: number): string {
 function formatContext(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M`;
   return `${(n / 1_000).toFixed(0)}K`;
+}
+
+function AccuracyIndicator({ isExact }: { isExact: boolean }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center cursor-help">
+          {isExact ? (
+            <CircleCheck className="w-3.5 h-3.5 text-chart-2" />
+          ) : (
+            <CircleDashed className="w-3.5 h-3.5 text-muted-foreground" />
+          )}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        <p className="text-xs">
+          {isExact
+            ? "Exact count via tiktoken tokenizer"
+            : "Approximate estimate based on character ratio"}
+        </p>
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function ModelTable({
@@ -69,7 +97,10 @@ function ModelTable({
             return (
               <TableRow key={est.model} data-testid={`row-model-${est.model.toLowerCase().replace(/[\s.]/g, "-")}`}>
                 <TableCell className="font-medium text-sm">
-                  {est.model}
+                  <div className="flex items-center gap-2">
+                    {est.model}
+                    <AccuracyIndicator isExact={est.isExact} />
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="text-xs">
@@ -104,7 +135,19 @@ function ModelTable({
 export function ModelComparison({ estimates }: ModelComparisonProps) {
   return (
     <Card className="p-5" data-testid="section-model-comparison">
-      <h3 className="text-sm font-semibold mb-4">Model Token Estimates & Costs</h3>
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <h3 className="text-sm font-semibold">Model Token Estimates & Costs</h3>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <CircleCheck className="w-3.5 h-3.5 text-chart-2" />
+            Exact (tiktoken)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CircleDashed className="w-3.5 h-3.5 text-muted-foreground" />
+            Approximate
+          </span>
+        </div>
+      </div>
       <Tabs defaultValue="cleaned">
         <TabsList className="mb-4">
           <TabsTrigger value="cleaned" data-testid="tab-cleaned">Cleaned Text</TabsTrigger>

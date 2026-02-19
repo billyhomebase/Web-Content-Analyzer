@@ -9,6 +9,7 @@ import { ContentBreakdownChart } from "@/components/content-breakdown-chart";
 import { StructureScore } from "@/components/structure-score";
 import { ReadabilityCard } from "@/components/readability-card";
 import { Recommendations } from "@/components/recommendations";
+import { Methodology } from "@/components/methodology";
 import { Zap, BarChart3, FileText } from "lucide-react";
 
 export default function Home() {
@@ -98,6 +99,8 @@ export default function Home() {
               <ReadabilityCard readability={result.readability} />
               <Recommendations recommendations={result.recommendations} />
             </div>
+
+            <Methodology />
           </div>
         )}
       </main>
@@ -105,7 +108,7 @@ export default function Home() {
       <footer className="border-t mt-12">
         <div className="max-w-6xl mx-auto px-4 py-4 text-center">
           <p className="text-xs text-muted-foreground">
-            Token estimates are approximate. Actual counts vary by model tokenizer.
+            OpenAI token counts are exact via tiktoken. Other model estimates are approximate.
           </p>
         </div>
       </footer>
