@@ -213,11 +213,11 @@ function analyzeStructure($: cheerio.CheerioAPI): StructureAnalysis {
     }
   });
 
-  function getMaxDepth(el: cheerio.Cheerio<cheerio.Element>, depth: number): number {
+  function getMaxDepth(el: cheerio.Cheerio<any>, depth: number): number {
     let max = depth;
     el.children().each((_, child) => {
       if (child.type === "tag") {
-        const childDepth = getMaxDepth($(child as cheerio.Element), depth + 1);
+        const childDepth = getMaxDepth($(child as any), depth + 1);
         if (childDepth > max) max = childDepth;
       }
     });
