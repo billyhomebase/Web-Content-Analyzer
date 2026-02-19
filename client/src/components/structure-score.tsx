@@ -56,12 +56,8 @@ export function StructureScore({ structure }: StructureScoreProps) {
       detail: `${structure.nestingDepth} levels deep`,
     },
     {
-      label: "No iframes",
+      label: structure.iframeCount === 0 ? "No iframes" : `${structure.iframeCount} iframe(s) found`,
       pass: structure.iframeCount === 0,
-      detail:
-        structure.iframeCount > 0
-          ? `${structure.iframeCount} iframe(s)`
-          : undefined,
     },
   ];
 
