@@ -10,7 +10,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async recordAnalyzedUrl(data: InsertAnalyzedUrl): Promise<AnalyzedUrl> {
-    const [row] = await db.insert(analyzedUrls).values(data).returning();
+    const [row] = await db.insert(analyzedUrls).values([data]).returning();
     return row;
   }
 

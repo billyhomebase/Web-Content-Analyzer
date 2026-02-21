@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, real, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -6,11 +6,28 @@ export const urlAnalysisRequestSchema = z.object({
   url: z.string().url("Please enter a valid URL"),
 });
 
+export interface ModelTokenSummary {
+  model: string;
+  provider: string;
+  tokensRaw: number;
+  tokensCleaned: number;
+  estimatedInputCostRaw: number;
+  estimatedInputCostCleaned: number;
+}
+
 export const analyzedUrls = pgTable("analyzed_urls", {
   id: serial("id").primaryKey(),
   url: text("url").notNull(),
   pageTitle: text("page_title"),
   analyzedAt: timestamp("analyzed_at").defaultNow().notNull(),
+  rawHtmlLength: integer("raw_html_length"),
+  cleanedTextLength: integer("cleaned_text_length"),
+  totalHtmlBytes: integer("total_html_bytes"),
+  textBytes: integer("text_bytes"),
+  scriptBytes: integer("script_bytes"),
+  structureScore: integer("structure_score"),
+  readabilityScore: real("readability_score"),
+  modelEstimates: jsonb("model_estimates").$type<ModelTokenSummary[]>(),
 });
 
 export const insertAnalyzedUrlSchema = createInsertSchema(analyzedUrls).omit({ id: true, analyzedAt: true });

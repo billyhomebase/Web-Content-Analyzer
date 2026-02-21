@@ -1,12 +1,131 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { AnalyzedUrl } from "@shared/schema";
+import type { AnalyzedUrl, ModelTokenSummary } from "@shared/schema";
 import { Card } from "@/components/ui/card";
-import { Zap, ArrowLeft, History as HistoryIcon, ExternalLink } from "lucide-react";
+import { Zap, ArrowLeft, History as HistoryIcon, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "wouter";
 
 interface HistoryResponse {
   urls: AnalyzedUrl[];
   totalCount: number;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatCost(cost: number): string {
+  if (cost < 0.001) return `<$0.001`;
+  return `$${cost.toFixed(4)}`;
+}
+
+function HistoryRow({ entry }: { entry: AnalyzedUrl }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasMetrics = entry.rawHtmlLength != null;
+  const models = (entry.modelEstimates ?? []) as ModelTokenSummary[];
+
+  return (
+    <div data-testid={`row-url-${entry.id}`}>
+      <div
+        className={`px-5 py-3 flex items-center justify-between gap-4 ${hasMetrics ? "cursor-pointer hover:bg-muted/50" : ""}`}
+        onClick={() => hasMetrics && setExpanded(!expanded)}
+        data-testid={`toggle-row-${entry.id}`}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <a
+              href={entry.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-primary hover:underline truncate"
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`link-url-${entry.id}`}
+            >
+              {entry.url}
+            </a>
+            <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+          </div>
+          {entry.pageTitle && (
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
+              {entry.pageTitle}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-xs text-muted-foreground tabular-nums" data-testid={`text-timestamp-${entry.id}`}>
+            {new Date(entry.analyzedAt).toLocaleString()}
+          </span>
+          {hasMetrics && (
+            expanded
+              ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
+        </div>
+      </div>
+
+      {expanded && hasMetrics && (
+        <div className="px-5 pb-4 space-y-4" data-testid={`details-${entry.id}`}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MetricCard label="Raw HTML" value={formatBytes(entry.rawHtmlLength!)} sub={`${entry.rawHtmlLength!.toLocaleString()} chars`} />
+            <MetricCard label="Clean Text" value={formatBytes(entry.cleanedTextLength!)} sub={`${entry.cleanedTextLength!.toLocaleString()} chars`} />
+            <MetricCard label="Structure Score" value={`${entry.structureScore ?? 0}/100`} />
+            <MetricCard label="Readability" value={`${(entry.readabilityScore ?? 0).toFixed(1)}`} sub="Flesch score" />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <MetricCard label="Total HTML" value={formatBytes(entry.totalHtmlBytes!)} />
+            <MetricCard label="Text Content" value={formatBytes(entry.textBytes!)} />
+            <MetricCard label="Scripts" value={formatBytes(entry.scriptBytes!)} />
+          </div>
+
+          {models.length > 0 && (
+            <div>
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Token Estimates by Model</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b text-muted-foreground">
+                      <th className="text-left py-1.5 pr-3 font-medium">Model</th>
+                      <th className="text-right py-1.5 px-3 font-medium">Raw Tokens</th>
+                      <th className="text-right py-1.5 px-3 font-medium">Clean Tokens</th>
+                      <th className="text-right py-1.5 px-3 font-medium">Cost (Raw)</th>
+                      <th className="text-right py-1.5 pl-3 font-medium">Cost (Clean)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {models.map((m) => (
+                      <tr key={m.model} className="border-b last:border-0">
+                        <td className="py-1.5 pr-3">
+                          <span className="font-medium">{m.model}</span>
+                          <span className="text-muted-foreground ml-1">({m.provider})</span>
+                        </td>
+                        <td className="text-right py-1.5 px-3 tabular-nums">{m.tokensRaw.toLocaleString()}</td>
+                        <td className="text-right py-1.5 px-3 tabular-nums">{m.tokensCleaned.toLocaleString()}</td>
+                        <td className="text-right py-1.5 px-3 tabular-nums">{formatCost(m.estimatedInputCostRaw)}</td>
+                        <td className="text-right py-1.5 pl-3 tabular-nums">{formatCost(m.estimatedInputCostCleaned)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="bg-muted/50 rounded-md p-2.5">
+      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm font-semibold tabular-nums">{value}</p>
+      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+    </div>
+  );
 }
 
 export default function History() {
@@ -71,34 +190,7 @@ export default function History() {
               <span>Analyzed</span>
             </div>
             {urls.map((entry) => (
-              <div
-                key={entry.id}
-                className="px-5 py-3 flex items-center justify-between gap-4"
-                data-testid={`row-url-${entry.id}`}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={entry.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium text-primary hover:underline truncate"
-                      data-testid={`link-url-${entry.id}`}
-                    >
-                      {entry.url}
-                    </a>
-                    <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                  </div>
-                  {entry.pageTitle && (
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      {entry.pageTitle}
-                    </p>
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground flex-shrink-0 tabular-nums" data-testid={`text-timestamp-${entry.id}`}>
-                  {new Date(entry.analyzedAt).toLocaleString()}
-                </span>
-              </div>
+              <HistoryRow key={entry.id} entry={entry} />
             ))}
           </Card>
         )}
