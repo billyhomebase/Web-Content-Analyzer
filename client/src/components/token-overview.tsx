@@ -33,13 +33,13 @@ export function TokenOverview({ result }: TokenOverviewProps) {
     {
       label: "Raw HTML Size",
       value: formatBytes(result.rawHtmlLength),
-      sub: `${formatNumber(avgTokensRaw)} avg tokens`,
+      sub: `${formatNumber(avgTokensRaw)} average tokens required for an LLM to process the HTML`,
       icon: Code,
     },
     {
       label: "Clean Text Size",
       value: formatBytes(result.cleanedTextLength),
-      sub: `${formatNumber(avgTokensCleaned)} avg tokens`,
+      sub: `${formatNumber(avgTokensCleaned)} average tokens required for an LLM to process the text`,
       icon: FileText,
     },
     {
@@ -71,7 +71,7 @@ export function TokenOverview({ result }: TokenOverviewProps) {
             <stat.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </div>
           <div
-            className={`font-semibold mb-1 ${stat.isTitle ? "text-sm truncate" : "text-2xl tabular-nums"}`}
+            className={`font-semibold mb-1 ${stat.isTitle ? "text-sm truncate" : "text-lg tabular-nums"}`}
             data-testid={`text-stat-${stat.label.toLowerCase().replace(/\s/g, "-")}`}
           >
             {stat.value}
