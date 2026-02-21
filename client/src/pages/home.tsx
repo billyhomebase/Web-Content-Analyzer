@@ -63,6 +63,20 @@ export default function Home() {
             </Link>
           </div>
         </div>
+        <div className="max-w-6xl mx-auto px-4 pb-3">
+          <p className="text-xs text-muted-foreground">
+            Built by{" "}
+            <a
+              href="https://www.linkedin.com/in/billyhanna/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+              data-testid="link-author"
+            >
+              Billy Hanna
+            </a>
+          </p>
+        </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
