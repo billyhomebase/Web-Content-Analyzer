@@ -76,7 +76,7 @@ export function TokenOverview({ result }: TokenOverviewProps) {
           >
             {stat.value}
           </div>
-          <p className="text-xs text-muted-foreground truncate">{stat.sub}</p>
+          <p className="text-sm text-muted-foreground truncate">{stat.sub}</p>
         </Card>
       ))}
     </div>
