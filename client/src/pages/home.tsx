@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { AnalysisResult } from "@shared/schema";
 import { UrlInput } from "@/components/url-input";
@@ -10,10 +10,16 @@ import { StructureScore } from "@/components/structure-score";
 import { ReadabilityCard } from "@/components/readability-card";
 import { Recommendations } from "@/components/recommendations";
 import { Methodology } from "@/components/methodology";
-import { Zap, BarChart3, FileText } from "lucide-react";
+import { Zap, BarChart3, FileText, History } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const queryClient = useQueryClient();
+
+  const countQuery = useQuery<{ totalCount: number }>({
+    queryKey: ["/api/history/count"],
+  });
 
   const analyzeMutation = useMutation({
     mutationFn: async (url: string) => {
@@ -22,23 +28,39 @@ export default function Home() {
     },
     onSuccess: (data) => {
       setResult(data);
+      queryClient.invalidateQueries({ queryKey: ["/api/history/count"] });
     },
   });
+
+  const totalCount = countQuery.data?.totalCount ?? 0;
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="max-w-6xl mx-auto px-4 py-5 flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
-            <Zap className="w-5 h-5 text-primary-foreground" />
+        <div className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
+              <Zap className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight" data-testid="text-app-title">
+                AI Token Analyzer
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Estimate AI processing costs for any web page
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight" data-testid="text-app-title">
-              AI Token Analyzer
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Estimate AI processing costs for any web page
-            </p>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground tabular-nums" data-testid="text-total-count">
+              {totalCount} page{totalCount !== 1 ? "s" : ""} analyzed
+            </span>
+            <Link href="/history" data-testid="link-history">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline cursor-pointer">
+                <History className="w-4 h-4" />
+                History
+              </span>
+            </Link>
           </div>
         </div>
       </header>

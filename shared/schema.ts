@@ -1,8 +1,21 @@
+import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const urlAnalysisRequestSchema = z.object({
   url: z.string().url("Please enter a valid URL"),
 });
+
+export const analyzedUrls = pgTable("analyzed_urls", {
+  id: serial("id").primaryKey(),
+  url: text("url").notNull(),
+  pageTitle: text("page_title"),
+  analyzedAt: timestamp("analyzed_at").defaultNow().notNull(),
+});
+
+export const insertAnalyzedUrlSchema = createInsertSchema(analyzedUrls).omit({ id: true, analyzedAt: true });
+export type InsertAnalyzedUrl = z.infer<typeof insertAnalyzedUrlSchema>;
+export type AnalyzedUrl = typeof analyzedUrls.$inferSelect;
 
 export type UrlAnalysisRequest = z.infer<typeof urlAnalysisRequestSchema>;
 
