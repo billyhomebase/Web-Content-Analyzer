@@ -21,6 +21,15 @@ export default function Home() {
     queryKey: ["/api/history/count"],
   });
 
+  const averagesQuery = useQuery<{
+    avgTokensRaw: number;
+    avgTokensCleaned: number;
+    avgMarkupRatio: number;
+    totalAnalyzed: number;
+  }>({
+    queryKey: ["/api/averages"],
+  });
+
   const analyzeMutation = useMutation({
     mutationFn: async (url: string) => {
       const res = await apiRequest("POST", "/api/analyze", { url });
@@ -29,6 +38,7 @@ export default function Home() {
     onSuccess: (data) => {
       setResult(data);
       queryClient.invalidateQueries({ queryKey: ["/api/history/count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/averages"] });
     },
   });
 
@@ -122,7 +132,7 @@ export default function Home() {
 
         {result && (
           <div className="space-y-6" data-testid="section-results">
-            <TokenOverview result={result} />
+            <TokenOverview result={result} runningAverages={averagesQuery.data} />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ContentBreakdownChart breakdown={result.contentBreakdown} />

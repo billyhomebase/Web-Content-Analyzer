@@ -1,10 +1,18 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { AnalysisResult } from "@shared/schema";
-import { FileText, Code, Hash, ExternalLink } from "lucide-react";
+import { FileText, Code, Hash, ExternalLink, TrendingUp } from "lucide-react";
+
+interface RunningAverages {
+  avgTokensRaw: number;
+  avgTokensCleaned: number;
+  avgMarkupRatio: number;
+  totalAnalyzed: number;
+}
 
 interface TokenOverviewProps {
   result: AnalysisResult;
+  runningAverages?: RunningAverages;
 }
 
 function formatBytes(bytes: number): string {
@@ -19,7 +27,7 @@ function formatNumber(num: number): string {
   return num.toLocaleString();
 }
 
-export function TokenOverview({ result }: TokenOverviewProps) {
+export function TokenOverview({ result, runningAverages }: TokenOverviewProps) {
   const avgTokensRaw = Math.round(
     result.modelEstimates.reduce((sum, m) => sum + m.tokensRaw, 0) /
       result.modelEstimates.length,
@@ -33,19 +41,49 @@ export function TokenOverview({ result }: TokenOverviewProps) {
     {
       label: "Raw HTML Size",
       value: formatBytes(result.rawHtmlLength),
-      subNode: <><span className="font-semibold">{formatNumber(avgTokensRaw)}</span> average tokens required for an LLM to process the HTML</>,
+      subNode: (
+        <>
+          <span className="font-semibold">{formatNumber(avgTokensRaw)}</span> average tokens required for an LLM to process the HTML
+          {runningAverages && runningAverages.totalAnalyzed > 0 && (
+            <span className="flex items-center gap-1 mt-1 text-xs text-muted-foreground/70" data-testid="text-avg-raw">
+              <TrendingUp className="w-3 h-3" />
+              Running avg: {formatNumber(runningAverages.avgTokensRaw)} tokens across {runningAverages.totalAnalyzed} pages
+            </span>
+          )}
+        </>
+      ),
       icon: Code,
     },
     {
       label: "Clean Text Size",
       value: formatBytes(result.cleanedTextLength),
-      subNode: <><span className="font-semibold">{formatNumber(avgTokensCleaned)}</span> average tokens required for an LLM to process the text</>,
+      subNode: (
+        <>
+          <span className="font-semibold">{formatNumber(avgTokensCleaned)}</span> average tokens required for an LLM to process the text
+          {runningAverages && runningAverages.totalAnalyzed > 0 && (
+            <span className="flex items-center gap-1 mt-1 text-xs text-muted-foreground/70" data-testid="text-avg-clean">
+              <TrendingUp className="w-3 h-3" />
+              Running avg: {formatNumber(runningAverages.avgTokensCleaned)} tokens across {runningAverages.totalAnalyzed} pages
+            </span>
+          )}
+        </>
+      ),
       icon: FileText,
     },
     {
       label: "Markup Ratio",
       value: `${result.markupToContentRatio.toFixed(1)}x`,
-      sub: "markup vs content",
+      subNode: (
+        <>
+          markup vs content
+          {runningAverages && runningAverages.totalAnalyzed > 0 && (
+            <span className="flex items-center gap-1 mt-1 text-xs text-muted-foreground/70" data-testid="text-avg-markup">
+              <TrendingUp className="w-3 h-3" />
+              Running avg: {runningAverages.avgMarkupRatio}x across {runningAverages.totalAnalyzed} pages
+            </span>
+          )}
+        </>
+      ),
       icon: Hash,
     },
     {

@@ -85,5 +85,14 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/averages", async (_req, res) => {
+    try {
+      const averages = await storage.getRunningAverages();
+      res.json(averages);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to fetch averages" });
+    }
+  });
+
   return httpServer;
 }
