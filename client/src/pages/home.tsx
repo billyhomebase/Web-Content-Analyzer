@@ -65,7 +65,7 @@ export default function Home() {
         </div>
         <div className="max-w-6xl mx-auto px-4 pb-3">
           <p className="text-xs text-muted-foreground">
-            Built by{" "}
+            Built by Billy Hanna{" "}
             <a
               href="https://www.linkedin.com/in/billyhanna/"
               target="_blank"
@@ -73,7 +73,7 @@ export default function Home() {
               className="text-primary hover:underline"
               data-testid="link-author"
             >
-              Billy Hanna
+              https://www.linkedin.com/in/billyhanna/
             </a>
           </p>
         </div>
