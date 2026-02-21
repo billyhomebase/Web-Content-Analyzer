@@ -22,24 +22,24 @@ function formatNumber(num: number): string {
 export function TokenOverview({ result }: TokenOverviewProps) {
   const avgTokensRaw = Math.round(
     result.modelEstimates.reduce((sum, m) => sum + m.tokensRaw, 0) /
-      result.modelEstimates.length
+      result.modelEstimates.length,
   );
   const avgTokensCleaned = Math.round(
     result.modelEstimates.reduce((sum, m) => sum + m.tokensCleaned, 0) /
-      result.modelEstimates.length
+      result.modelEstimates.length,
   );
 
   const stats = [
     {
       label: "Raw HTML Size",
-      value: formatBytes(result.rawHtmlLength),
-      sub: `${formatNumber(avgTokensRaw)} avg tokens`,
+      value: `${formatNumber(avgTokensRaw)} avg tokens`,
+      sub: formatBytes(result.rawHtmlLength),
       icon: Code,
     },
     {
       label: "Clean Text Size",
-      value: formatBytes(result.cleanedTextLength),
-      sub: `${formatNumber(avgTokensCleaned)} avg tokens`,
+      value: `${formatNumber(avgTokensCleaned)} avg tokens`,
+      sub: formatBytes(result.cleanedTextLength),
       icon: FileText,
     },
     {
@@ -58,7 +58,10 @@ export function TokenOverview({ result }: TokenOverviewProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="section-overview">
+    <div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      data-testid="section-overview"
+    >
       {stats.map((stat) => (
         <Card key={stat.label} className="p-4">
           <div className="flex items-start justify-between gap-2 mb-3">
