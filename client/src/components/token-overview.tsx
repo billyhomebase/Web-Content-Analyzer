@@ -32,14 +32,14 @@ export function TokenOverview({ result }: TokenOverviewProps) {
   const stats = [
     {
       label: "Raw HTML Size",
-      value: `${formatNumber(avgTokensRaw)} avg tokens`,
-      sub: formatBytes(result.rawHtmlLength),
+      value: formatBytes(result.rawHtmlLength),
+      sub: `${formatNumber(avgTokensRaw)} avg tokens`,
       icon: Code,
     },
     {
       label: "Clean Text Size",
-      value: `${formatNumber(avgTokensCleaned)} avg tokens`,
-      sub: formatBytes(result.cleanedTextLength),
+      value: formatBytes(result.cleanedTextLength),
+      sub: `${formatNumber(avgTokensCleaned)} avg tokens`,
       icon: FileText,
     },
     {
