@@ -33,13 +33,13 @@ export function TokenOverview({ result }: TokenOverviewProps) {
     {
       label: "Raw HTML Size",
       value: formatBytes(result.rawHtmlLength),
-      sub: `${formatNumber(avgTokensRaw)} average tokens required for an LLM to process the HTML`,
+      subNode: <><span className="font-semibold">{formatNumber(avgTokensRaw)}</span> average tokens required for an LLM to process the HTML</>,
       icon: Code,
     },
     {
       label: "Clean Text Size",
       value: formatBytes(result.cleanedTextLength),
-      sub: `${formatNumber(avgTokensCleaned)} average tokens required for an LLM to process the text`,
+      subNode: <><span className="font-semibold">{formatNumber(avgTokensCleaned)}</span> average tokens required for an LLM to process the text</>,
       icon: FileText,
     },
     {
@@ -76,7 +76,7 @@ export function TokenOverview({ result }: TokenOverviewProps) {
           >
             {stat.value}
           </div>
-          <p className="text-sm text-muted-foreground truncate">{stat.sub}</p>
+          <p className="text-sm text-muted-foreground truncate">{"subNode" in stat ? stat.subNode : stat.sub}</p>
         </Card>
       ))}
     </div>
