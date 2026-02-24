@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { pool } from "./db";
 import { analyzedUrls, type InsertAnalyzedUrl, type AnalyzedUrl } from "@shared/schema";
-import { desc, count } from "drizzle-orm";
+import { desc, count, eq } from "drizzle-orm";
 
 export interface RunningAverages {
   avgTokensRaw: number;
@@ -24,11 +24,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRecentUrls(limit: number): Promise<AnalyzedUrl[]> {
-    return db.select().from(analyzedUrls).orderBy(desc(analyzedUrls.analyzedAt)).limit(limit);
+    return db.select().from(analyzedUrls).where(eq(analyzedUrls.flagged, 0)).orderBy(desc(analyzedUrls.analyzedAt)).limit(limit);
   }
 
   async getTotalCount(): Promise<number> {
-    const [result] = await db.select({ value: count() }).from(analyzedUrls);
+    const [result] = await db.select({ value: count() }).from(analyzedUrls).where(eq(analyzedUrls.flagged, 0));
     return result.value;
   }
 
@@ -46,7 +46,7 @@ export class DatabaseStorage implements IStorage {
           (SELECT AVG((elem->>'tokensRaw')::numeric) FROM jsonb_array_elements(model_estimates) elem) as avg_raw,
           (SELECT AVG((elem->>'tokensCleaned')::numeric) FROM jsonb_array_elements(model_estimates) elem) as avg_clean
         FROM analyzed_urls
-        WHERE model_estimates IS NOT NULL
+        WHERE model_estimates IS NOT NULL AND flagged = 0
       ) sub
     `);
     const row = result.rows[0];

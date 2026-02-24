@@ -4,6 +4,36 @@ import { analyzeUrl } from "./analyzer";
 import { urlAnalysisRequestSchema, type StructureAnalysis, type ModelTokenSummary } from "@shared/schema";
 import { storage } from "./storage";
 
+const ADULT_DOMAINS = new Set([
+  "pornhub.com", "xvideos.com", "xnxx.com", "xhamster.com",
+  "redtube.com", "youporn.com", "tube8.com", "spankbang.com",
+  "beeg.com", "brazzers.com", "bangbros.com", "realitykings.com",
+  "naughtyamerica.com", "mofos.com", "teamskeet.com",
+  "chaturbate.com", "stripchat.com", "bongacams.com",
+  "livejasmin.com", "cam4.com", "myfreecams.com",
+  "onlyfans.com", "fansly.com", "manyvids.com",
+  "rule34.xxx", "nhentai.net", "hentaihaven.xxx",
+  "e-hentai.org", "gelbooru.com", "danbooru.donmai.us",
+  "sex.com", "fuq.com", "tnaflix.com", "drtuber.com",
+  "motherless.com", "eporner.com", "hclips.com",
+  "txxx.com", "sunporno.com", "perfectgirls.net",
+  "porntrex.com", "4tube.com", "fapvid.com",
+]);
+
+function isFlaggedDomain(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    for (const domain of ADULT_DOMAINS) {
+      if (hostname === domain || hostname.endsWith(`.${domain}`)) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function calcStructureScore(s: StructureAnalysis): number {
   let score = 0;
   if (s.hasH1) score += 15;
@@ -54,6 +84,7 @@ export async function registerRoutes(
         structureScore: calcStructureScore(result.structureAnalysis),
         readabilityScore: result.readability.readabilityScore,
         modelEstimates: modelSummaries,
+        flagged: isFlaggedDomain(parsed.data.url) ? 1 : 0,
       });
 
       res.json(result);

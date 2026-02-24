@@ -28,6 +28,7 @@ export const analyzedUrls = pgTable("analyzed_urls", {
   structureScore: integer("structure_score"),
   readabilityScore: real("readability_score"),
   modelEstimates: jsonb("model_estimates").$type<ModelTokenSummary[]>(),
+  flagged: integer("flagged").default(0).notNull(),
 });
 
 export const insertAnalyzedUrlSchema = createInsertSchema(analyzedUrls).omit({ id: true, analyzedAt: true });
